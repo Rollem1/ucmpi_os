@@ -3,7 +3,7 @@
 # (c) 2019,2020,2021 alphaWerk Ltd
 
 SCRIPTVERSION=2.0.0.0
-NODEVERSION=v10.16.0
+NODEVERSION=v16.13.0
 DISTRO="linux-$(uname -m)"
 LOCALIP="$(hostname -I | xargs)"
 
@@ -108,7 +108,7 @@ echo -e "${GREEN}configuring pm2${NC}"
 pm2 startup | tail -1 | sudo -E bash - > /dev/null 2>&1 || error_exit "Unable to configure pm2 to start at boot"
 
 echo -e "${GREEN}Installing Node-Red${NC}"
-sudo npm install --silent -g --unsafe-perm node-red@1.2.6 > /dev/null 2>&1 || error_exit "Unable to install node-red"
+sudo npm install --silent -g --unsafe-perm node-red@2.1.3 > /dev/null 2>&1 || error_exit "Unable to install node-red"
 sudo npm install --silent -g mqtt > /dev/null 2>&1 || error_exit "Unable to install mqtt"
 
 if test -h /usr/bin/node-red; then
@@ -147,8 +147,11 @@ if test ! -d /etc/ucmpi_os/core; then
 	mkdir /etc/ucmpi_os/core || error_exit "Unable to create ucmpi_os/core config directory"
 fi
 
-if test ! -d /usr/lib/node_modules/node-red/nodes/ucmpi_os; then
-	sudo mkdir /usr/lib/node_modules/node-red/nodes/ucmpi_os || error_exit "Unable to create cytech node directory"
+
+if test ! -d  $NODEROOT/lib/node_modules/node-red/node_modules/@node-red/nodes/ucmpi_os; then
+sudo mkdir $NODEROOT/lib/node_modules/node-red/node_modules/@node-red/nodes/ucmpi_os || error_exit "Unable to create cytech node directory"
+	
+
 fi
 
 echo -e "${GREEN}Installing dependancies ${NC}"
@@ -178,14 +181,14 @@ cp -r ./ucmpi_os-main/ucmpi/ucmpi_os/* ~/ucmpi_os || error_exit "Unable to copy 
 cp ./ucmpi_os-main/ucmpi/absolute/etc/ucmpi_os/core/config.json /etc/ucmpi_os/core/config.json || error_exit "Unable to move config.json into place"
 NODEROOT="$(npm root -g)" || error_exit "Unable to determine global nodes.js directory"
 sudo cp -r ./ucmpi_os-main/ucmpi/absolute/usr/lib/node_modules/node-red/* $NODEROOT/node-red/node_modules/@node-red || error_exit "Unable to copy node-red modules into place"
-sudo cp ./ucmpi_os-main/ucmpi/absolute/home/pi/node-red\[hidden\]/* ~/.node-red || error_exit "Unable to copy node-red auth and settings modules into place"
+cp ~/ucmpi_os/temp//ucmpi_os-main/ucmpi/absolute/home/pi/node-red\[hidden\]/* ~/.node-red || error_exit "Unable to copy node-red auth and settings modules into place"
 
 
 echo -e "${GREEN}Installing Node-Red Modules${NC}"
 pm2 start node-red
 sleep 10
 cd ~/.node-red || error_exit "Unable to change directory to ~/.node-red"
-npm install --save --silent node-red-dashboard@2.29.3 || error_exit "Unable to install node-red-dashboard"
+npm install --save --silent node-red-dashboard@3.1.0 || error_exit "Unable to install node-red-dashboard"
 
 echo -e "${GREEN}Starting Components ${NC}"
 cd ~/ucmpi_os || error_exit "Unable to change to home dir"
@@ -199,4 +202,3 @@ echo -e "${RED}All Done!!"
 echo -e "${GREEN}You may now connect to HTTP:${LOCALIP}:1080 to access the management console and HTTP://${LOCALIP}:1880 to access Node-Red ${NC}"
 echo -e "${GREEN}You will need to create a user account in the management console before accessing Node-Red ${NC}"
 exit 0
-
